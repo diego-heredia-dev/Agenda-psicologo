@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agenda de citas</title>
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- FullCalendar JS -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js" defer></script>
+
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+
+    <!-- Nuestro JS -->
+    <script src="main.js" defer></script>
+
+</head>
+<body>
+    <header class="top-bar">
+        <button class="header__button" onclick="openForm()">Nueva cita</button>
+    </header>
+    <div id="calendar"></div>
+    
+    <div class="new-appointment__overlay">
+        <form class="new-appointment">
+    
+            <h2 class="new-appointment__title">Registrar nueva cita</h2>
+
+            <label>Nombre del paciente</label>
+            <input type="text" id="patient-name"/>
+
+            <label>Apellido del paciente</label>
+            <input type="text" id="patient-lastname"/>
+
+            <label>Descripcion</label>
+            <textarea rows="3" id="patient-description"></textarea>
+
+            <label>Inicio</label>
+            <input type="datetime-local" id="appointment-start"/>
+
+            <label>Fin</label>
+            <input type="datetime-local" id="appointment-end"/>
+
+            <div class="new-appointment__buttons">
+                <button type="button" onclick="saveAppointment()">Guardar</button>
+                <button type="button" onclick="closeForm()">Cancelar</button>
+            </div>
+        </form>
+    </div>
+    
+</body>
+</html>
