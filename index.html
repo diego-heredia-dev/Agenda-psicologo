@@ -35,12 +35,15 @@
 
             <label>Descripcion</label>
             <textarea rows="3" id="patient-description"></textarea>
+            
+            <label>Fecha</label>
+            <input type="date" id="appointment-date"/>
 
-            <label>Inicio</label>
-            <input type="datetime-local" id="appointment-start"/>
+            <label>Hora Inicio</label>
+            <input type="time" id="appointment-start"/>
 
-            <label>Fin</label>
-            <input type="datetime-local" id="appointment-end"/>
+            <label>Hora Fin</label>
+            <input type="time" id="appointment-end"/>
 
             <div class="new-appointment__buttons">
                 <button type="button" onclick="saveAppointment()">Guardar</button>
