@@ -17,9 +17,6 @@
 
 </head>
 <body>
-    <header class="top-bar">
-        <button class="header__button" onclick="openForm()">Nueva cita</button>
-    </header>
     <div id="calendar"></div>
     
     <div class="new-appointment__overlay">
@@ -37,7 +34,7 @@
             <textarea rows="3" id="patient-description"></textarea>
             
             <label>Fecha</label>
-            <input type="date" id="appointment-date"/>
+            <input type="date" id="appointment-date" min=""/>
 
             <label>Hora Inicio</label>
             <input type="time" id="appointment-start"/>
@@ -52,5 +49,12 @@
         </form>
     </div>
     
+    <div id="toast-container"></div>
+
+    <div id="reminder-popup" class="reminder-popup hidden">
+        <h3>Recordatorio de cita</h3>
+        <p id="reminder-message"></p>
+        <button onclick="closeReminder()">Cerrar</button>
+    </div>
 </body>
 </html>
