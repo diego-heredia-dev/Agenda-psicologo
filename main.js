@@ -1,5 +1,26 @@
+const supabaseUrl = "https://migcihzdwmknwnpbrrhy.supabase.co";
+const supabaseKey = "sb_publishable_T40d5CvGLsTftQUlmmwgIA_8fcu3kIc";
+
+const supabaseClient = window.supabase.createClient(
+    supabaseUrl,
+    supabaseKey
+);
+
+async function testConnection() {
+
+    const { data, error } = await supabaseClient
+        .from("patients")
+        .select("*");
+
+    console.log("Supabase conexión:", data, error);
+}
+
+testConnection();
+
 let calendar
 let currentEvent = null;
+let patients = [];
+let selectedPatientDni = null;
 
 document.addEventListener('DOMContentLoaded', function () {
     const calendarEl = document.getElementById('calendar');
@@ -34,7 +55,6 @@ document.addEventListener('DOMContentLoaded', function () {
         allDaySlot: false,
         height: "auto",
         nowIndicator: true,
-        scrollTime: true,
         
         //abre formulario de nueva cita
         dateClick: function(info) {
@@ -77,10 +97,13 @@ document.addEventListener('DOMContentLoaded', function () {
             const name = event.extendedProps.name;
             const lastname = event.extendedProps.lastname;
 
+            selectedPatientDni = event.extendedProps.patientDNI;
+
             document.getElementById("patient-name").value = name;
             document.getElementById("patient-lastname").value = lastname;
             document.getElementById("patient-description").value = event.extendedProps.description;
-
+            document.getElementById("patient-phone").value = event.extendedProps.phone;
+            document.getElementById("patient-email").value = event.extendedProps.email;
             document.getElementById("appointment-date").value = date;
             document.getElementById("appointment-start").value = startTime;
             document.getElementById("appointment-end").value = endTime;
@@ -93,6 +116,11 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 function openForm() {
+    if(!currentEvent) {
+        selectedPatientDni = null;
+    }
+    document.getElementById("patient-suggestions").innerHTML = "";
+
     document.querySelector(".new-appointment__title").textContent = 
     currentEvent ? "Editar cita" : "Registrar nueva cita";
 
@@ -106,15 +134,26 @@ function closeForm() {
     currentEvent = null;
 }
 
+function openPatientForm() {
+    document.getElementById("patient-modal").style.display = "flex";
+}
+
+function closePatientForm() {
+    document.querySelector(".patient-form").reset();
+    document.getElementById("patient-modal").style.display = "none";
+}
+
 function saveAppointment() {
     const name = document.getElementById("patient-name").value;
     const lastname = document.getElementById("patient-lastname").value;
+    const phone = document.getElementById("patient-phone").value;
+    const email = document.getElementById("patient-email").value;
     const description = document.getElementById("patient-description").value;
     const date = document.getElementById("appointment-date").value;
     const start = document.getElementById("appointment-start").value;
     const end = document.getElementById("appointment-end").value;
 
-    if (!name || !lastname || !date || !start || !end) {
+    if (!name || !lastname || !phone || !email || !date || !start || !end) {
         showToast("Por favor completar todos los campos obligatorios");
         return;
     }
@@ -133,16 +172,21 @@ function saveAppointment() {
         return;
     }
 
+    if (!selectedPatientDni) {
+        showToast("Debe seleccionar un paciente registrado");
+        return;
+    }
+
     const events = calendar.getEvents();
 
-    for (let event of events) {
+    for (let existingEvent of events) {
 
-        if (event === currentEvent) {
+        if (currentEvent && existingEvent.id === currentEvent.id) {
             continue;
         }
 
-        const existingStart = event.start;
-        const existingEnd = event.end;
+        const existingStart = existingEvent.start;
+        const existingEnd = existingEvent.end;
 
         if (startDateTime < existingEnd && endDateTime > existingStart) {
             showToast("La cita se superpone con otra");
@@ -158,8 +202,11 @@ function saveAppointment() {
         currentEvent.setStart(startDateTime);
         currentEvent.setEnd(endDateTime);
 
+        currentEvent.setExtendedProp("patientDNI", selectedPatientDni);
         currentEvent.setExtendedProp("name", name);
         currentEvent.setExtendedProp("lastname", lastname);
+        currentEvent.setExtendedProp("phone", phone);
+        currentEvent.setExtendedProp("email", email);
         currentEvent.setExtendedProp("description", description);
         currentEvent.setExtendedProp("notified", false);
 
@@ -172,8 +219,11 @@ function saveAppointment() {
             start: startDateTime,
             end: endDateTime,
             extendedProps: {
+                patientDNI: selectedPatientDni,
                 name: name,
                 lastname: lastname,
+                phone: phone,
+                email: email,
                 description: description,
                 notified: false
             }
@@ -186,6 +236,37 @@ function saveAppointment() {
 
     showToast("Cita guardada correctamente", "success");
     closeForm();
+}
+
+function savePatient() {
+
+    const name = document.getElementById("patient-new-name").value;
+    const lastname = document.getElementById("patient-new-lastname").value;
+    const dni = document.getElementById("patient-new-dni").value;
+    const phone = document.getElementById("patient-new-phone").value;
+    const email = document.getElementById("patient-new-email").value;
+
+    if (!name || !lastname || !dni) {
+        showToast("Nombre, apellido y DNI son obligatorios");
+        return;
+    }
+
+    if (patients.some(p => p.dni === dni)) {
+        showToast("Ya existe un paciente con ese DNI.");
+        return;
+    }
+
+    const patient = {
+        dni,
+        name,
+        lastname,
+        phone,
+        email
+    };
+
+    patients.push(patient);
+    showToast("Paciente registrado", "success");
+    closePatientForm();
 }
 
 function showToast(message, type = "error") {
@@ -239,3 +320,41 @@ function closeReminder() {
     document.getElementById("reminder-popup").classList.add("hidden");
 }
 
+function searchPatients() {
+    selectedPatientDni = null;
+
+    const input = document.getElementById("patient-name").value.toLowerCase();
+    const suggestions = document.getElementById("patient-suggestions");
+
+    suggestions.innerHTML = "";
+
+    if (!input) return;
+
+    const matches = patients.filter(p =>
+        p.name.toLowerCase().startsWith(input)
+    );
+
+    matches.forEach(patient => {
+
+        const div = document.createElement("div");
+        div.classList.add("patient-suggestion");
+
+        div.textContent = `${patient.name} ${patient.lastname}`;
+
+        div.onclick = () => selectPatient(patient);
+
+        suggestions.appendChild(div);
+    });
+}
+
+function selectPatient(patient) {
+
+    document.getElementById("patient-name").value = patient.name;
+    document.getElementById("patient-lastname").value = patient.lastname;
+    document.getElementById("patient-phone").value = patient.phone || "";
+    document.getElementById("patient-email").value = patient.email || "";
+
+    selectedPatientDni = patient.dni;
+
+    document.getElementById("patient-suggestions").innerHTML = "";
+}

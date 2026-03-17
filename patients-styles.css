@@ -1,0 +1,19 @@
+#patients-table {
+    border-collapse: collapse;
+    width: 80%;
+    margin: 20px auto;
+}
+
+#patients-table th,
+#patients-table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+}
+
+#patients-table th {
+    background: #f0f0f0;
+}
+
+.patient-actions button {
+    margin-right: 5px;
+}
