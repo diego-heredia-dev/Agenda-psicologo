@@ -10,8 +10,8 @@ async function testConnection() {
 
     const { data, error } = await supabaseClient
         .from("patients")
-        .select("*");
-
+        .select("*")
+        .eq("is_deleted", false);
     console.log("Supabase conexión:", data, error);
 }
 
@@ -22,22 +22,10 @@ let currentEvent = null;
 let patients = [];
 let selectedPatientDni = null;
 
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
     const calendarEl = document.getElementById('calendar');
 
-    //Solicitar permiso para notificaciones
-    if ("Notification" in window && Notification.permission !== "granted") {
-        Notification.requestPermission();
-    }
-
-    //esto es para cerrar el overlay cuando se hace click en lugar diferente de new-appointment
-    document.querySelector('.new-appointment__overlay').addEventListener("click", function(e) {
-        if (e.target.classList.contains('new-appointment__overlay')) {
-            closeForm();
-        }
-    });
-
-    document.getElementById("appointment-date").min = new Date().toISOString().split("T")[0];
+    await loadPatients();
 
     calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'timeGridWeek',
@@ -113,6 +101,17 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     calendar.render();
+
+    await loadAppointments();
+
+    //esto es para cerrar el overlay cuando se hace click en lugar diferente de new-appointment
+    document.querySelector('.new-appointment__overlay').addEventListener("click", function(e) {
+        if (e.target.classList.contains('new-appointment__overlay')) {
+            closeForm();
+        }
+    });
+
+    document.getElementById("appointment-date").min = new Date().toISOString().split("T")[0];
 });
 
 function openForm() {
@@ -123,6 +122,11 @@ function openForm() {
 
     document.querySelector(".new-appointment__title").textContent = 
     currentEvent ? "Editar cita" : "Registrar nueva cita";
+
+    const deleteBtn = document.querySelector(".delete-button");
+    if(deleteBtn) {
+        deleteBtn.style.display = currentEvent ? "block" : "none";
+    }
 
     document.querySelector('.new-appointment__overlay').style.display = "flex";
 }
@@ -143,7 +147,7 @@ function closePatientForm() {
     document.getElementById("patient-modal").style.display = "none";
 }
 
-function saveAppointment() {
+async function saveAppointment() {
     const name = document.getElementById("patient-name").value;
     const lastname = document.getElementById("patient-lastname").value;
     const phone = document.getElementById("patient-phone").value;
@@ -210,22 +214,50 @@ function saveAppointment() {
         currentEvent.setExtendedProp("description", description);
         currentEvent.setExtendedProp("notified", false);
 
+        await supabaseClient
+            .from("appointments")
+            .update({
+                patient_dni: selectedPatientDni,
+                description: description,
+                start_time: startDateTime,
+                end_time: endDateTime
+            })
+            .eq("id", currentEvent.id);
+
         event = currentEvent;
         currentEvent = null;
     } 
     else {
+        const { data, error } = await supabaseClient
+            .from("appointments")
+            .insert({
+                patient_dni: selectedPatientDni,
+                description: description,
+                start_time: startDateTime,
+                end_time: endDateTime,
+                is_deleted: false
+            })
+            .select()
+            .single();
+
+        if (error) {
+            console.error(error);
+            showToast("Error al guardar cita");
+            return;
+        }
+
         event = calendar.addEvent({
+            id: data.id, 
             title: name + " " + lastname,
             start: startDateTime,
             end: endDateTime,
             extendedProps: {
                 patientDNI: selectedPatientDni,
-                name: name,
-                lastname: lastname,
-                phone: phone,
-                email: email,
-                description: description,
-                notified: false
+                name,
+                lastname,
+                phone,
+                email,
+                description
             }
         });
     }
@@ -238,7 +270,7 @@ function saveAppointment() {
     closeForm();
 }
 
-function savePatient() {
+async function savePatient() {
 
     const name = document.getElementById("patient-new-name").value;
     const lastname = document.getElementById("patient-new-lastname").value;
@@ -251,22 +283,43 @@ function savePatient() {
         return;
     }
 
-    if (patients.some(p => p.dni === dni)) {
-        showToast("Ya existe un paciente con ese DNI.");
+    const { error } = await supabaseClient
+        .from("patients")
+        .insert({
+            dni: dni,
+            name: name,
+            lastname: lastname,
+            phone: phone,
+            email: email,
+            is_deleted: false
+        });
+
+    if (error) {
+        showToast("Error al registrar paciente");
+        console.error(error);
         return;
     }
 
-    const patient = {
-        dni,
-        name,
-        lastname,
-        phone,
-        email
-    };
-
-    patients.push(patient);
     showToast("Paciente registrado", "success");
+
+    await loadPatients();
+
     closePatientForm();
+}
+
+async function loadPatients() {
+
+    const { data, error } = await supabaseClient
+        .from("patients")
+        .select("*")
+        .eq("is_deleted", false);
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    patients = data;
 }
 
 function showToast(message, type = "error") {
@@ -357,4 +410,81 @@ function selectPatient(patient) {
     selectedPatientDni = patient.dni;
 
     document.getElementById("patient-suggestions").innerHTML = "";
+}
+
+async function deletePatient(dni) {
+
+    await supabaseClient
+        .from("patients")
+        .update({ is_deleted: true })
+        .eq("dni", dni);
+
+    showToast("Paciente eliminado", "success");
+
+    await loadPatients();
+}
+
+async function loadAppointments() {
+
+    const { data, error } = await supabaseClient
+        .from("appointments")
+        .select(`
+            *,
+            patients(name, lastname, phone, email)
+        `)
+        .eq("is_deleted", false);
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    calendar.removeAllEvents();
+
+    data.forEach(app => {
+
+        calendar.addEvent({
+            id: app.id,
+            title: `${app.patients?.name || ""} ${app.patients?.lastname || ""}`,
+            start: app.start_time,
+            end: app.end_time,
+            extendedProps: {
+                patientDNI: app.patient_dni,
+                name: app.patients?.name,
+                lastname: app.patients?.lastname,
+                phone: app.patients?.phone,
+                email: app.patients?.email,
+                description: app.description
+            }
+        });
+
+    });
+}
+
+async function deleteAppointment() {
+
+    if (!currentEvent) return;
+
+    const confirmDelete = confirm("¿Seguro que quieres eliminar esta cita?");
+    if (!confirmDelete) return;
+
+    const id = currentEvent.id;
+
+    const { error } = await supabaseClient
+        .from("appointments")
+        .update({ is_deleted: true })
+        .eq("id", id);
+
+    if (error) {
+        console.error(error);
+        showToast("Error al eliminar cita");
+        return;
+    }
+
+    // eliminar del calendario
+    currentEvent.remove();
+
+    showToast("Cita eliminada", "success");
+
+    closeForm();
 }

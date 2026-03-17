@@ -250,3 +250,17 @@ body {
     width: 100%;
     resize: vertical;
 }
+
+.new-appointment .delete-button {
+    background-color: #d9534f !important; 
+    color: #ffffff !important;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.new-appointment .delete-button:hover {
+    background-color: #c9302c !important;
+}
