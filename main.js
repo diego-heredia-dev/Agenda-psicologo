@@ -283,27 +283,55 @@ async function savePatient() {
         return;
     }
 
+    const { data: existing } = await supabaseClient
+        .from("patients")
+        .select("*")
+        .eq("dni", dni)
+        .single();
+
+    if (existing) {
+        const { error } = await supabaseClient
+            .from("patients")
+            .update({
+                name,
+                lastname,
+                phone,
+                email,
+                is_deleted: false
+            })
+            .eq("dni", dni);
+
+        if (error) {
+            console.error(error);
+            showToast("Error al restaurar paciente");
+            return;
+        }
+
+        showToast("Paciente restaurado", "success");
+        await loadPatients();
+        closePatientForm();
+        return;
+    }
+
     const { error } = await supabaseClient
         .from("patients")
         .insert({
-            dni: dni,
-            name: name,
-            lastname: lastname,
-            phone: phone,
-            email: email,
+            dni,
+            name,
+            lastname,
+            phone,
+            email,
             is_deleted: false
         });
 
     if (error) {
-        showToast("Error al registrar paciente");
         console.error(error);
+        showToast("Error al registrar paciente");
         return;
     }
 
     showToast("Paciente registrado", "success");
-
     await loadPatients();
-
     closePatientForm();
 }
 
@@ -344,7 +372,7 @@ function showToast(message, type = "error") {
 
 function scheduleReminder(event) {
     const start = event.start;
-    const reminderTime = new Date(start.getTime() - 1 * 60000);
+    const reminderTime = new Date(start.getTime() - 15 * 60000);
     const now = new Date();
 
     const delay = reminderTime - now;

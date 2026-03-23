@@ -1,35 +1,61 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Pacientes registrados</title>
-<link rel="stylesheet" href="patients-styles.css">
-<script src="patients.js" defer></script>
-</head>
+    <meta charset="UTF-8">
+    <title>Pacientes</title>
+    <link rel="stylesheet" href="patients-styles.css">
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js" defer></script>
+    <script src="patients-main.js" defer></script>
+</head>
 <body>
 
-<h1>Pacientes registrados</h1>
+    <header class="top-bar">
+        <button onclick="window.location.href='index.html'" class="btn-secondary">← Volver</button>
+        <h2>Pacientes registrados</h2>
+    </header>
 
-<table id="patients-table">
+    <div class="patients-container">
+        <table class="patients-table">
+            <thead>
+                <tr>
+                    <th>DNI</th>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Teléfono</th>
+                    <th>Email</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="patients-body"></tbody>
+        </table>
+    </div>
 
-<thead>
-<tr>
-<th>DNI</th>
-<th>Nombre</th>
-<th>Apellido</th>
-<th>Teléfono</th>
-<th>Email</th>
-<th>Acciones</th>
-</tr>
-</thead>
+    <div class="patient-edit__overlay" id="edit-modal">
+        <form class="patient-form">
 
-<tbody>
-</tbody>
+            <h2>Editar paciente</h2>
 
-</table>
+            <label>Nombre</label>
+            <input type="text" id="edit-name">
 
-<a href="index.html">Volver a la agenda</a>
+            <label>Apellido</label>
+            <input type="text" id="edit-lastname">
 
+            <label>Teléfono</label>
+            <input type="text" id="edit-phone">
+
+            <label>Email</label>
+            <input type="email" id="edit-email">
+
+            <div class="patient-form__buttons">
+                <button type="button" onclick="updatePatient()">Guardar</button>
+                <button type="button" onclick="closeEditForm()">Cancelar</button>
+            </div>
+
+        </form>
+    </div>
+
+    <div id="toast-container"></div>
 </body>
 </html>
