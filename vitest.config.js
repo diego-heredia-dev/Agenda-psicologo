@@ -5,8 +5,10 @@ export default defineConfig({
     environment: 'jsdom',
 
     coverage: {
-      provider: 'v8',
-      reporter: ['text', 'html']
+      provider: 'istanbul',
+      reporter: ['text', 'html'],
+
+      include: ['src/services/**/*.js']
     }
   }
 });
