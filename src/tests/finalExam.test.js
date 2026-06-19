@@ -16,7 +16,7 @@ describe("appointmentService.js", () => {
         }
 
         //Act
-        const result = shouldRestorePacient(pacient);
+        const result = shouldRestorePatient(pacient);
 
         //Assert
         expect(result).toBe(true);
