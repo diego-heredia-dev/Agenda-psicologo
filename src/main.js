@@ -1,3 +1,5 @@
+import { shouldRestorePatient } from "./services/appointmentService";
+
 const supabaseUrl = "https://migcihzdwmknwnpbrrhy.supabase.co";
 const supabaseKey = "sb_publishable_T40d5CvGLsTftQUlmmwgIA_8fcu3kIc";
 
@@ -289,7 +291,7 @@ async function savePatient() {
         .eq("dni", dni)
         .single();
 
-    if (existing) {
+    if (existing && shouldRestorePatient(existing)) {
         const { error } = await supabaseClient
             .from("patients")
             .update({
