@@ -4,7 +4,8 @@ import {
     isPastDate,
     isInvalidRange,
     hasAppointmentConflict,
-    shouldRestorePatient
+    shouldRestorePatient,
+    shouldScheduleReminder
 } from "../services/appointmentService";
 
 describe("appointmentService.js", () => {
@@ -20,5 +21,16 @@ describe("appointmentService.js", () => {
 
         //Assert
         expect(result).toBe(true);
+    });
+
+    test("shouldScheduleReminder_NegativeDelay_ReturnFalse", () => {
+        //Arrange
+        const delay = -1000;
+
+        //Act
+        const result = shouldScheduleReminder(delay);
+        
+        //Assert
+        expect(result).toBe(false);
     });
 })
