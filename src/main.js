@@ -1,4 +1,4 @@
-import { shouldRestorePatient } from "./services/appointmentService";
+import { shouldRestorePatient, shouldScheduleReminder } from "./services/appointmentService";
 
 const supabaseUrl = "https://migcihzdwmknwnpbrrhy.supabase.co";
 const supabaseKey = "sb_publishable_T40d5CvGLsTftQUlmmwgIA_8fcu3kIc";
@@ -379,7 +379,7 @@ function scheduleReminder(event) {
 
     const delay = reminderTime - now;
 
-    if (delay <= 0) {
+    if (!shouldScheduleReminder(delay)) {
         return;
     }
 
