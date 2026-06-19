@@ -10,6 +10,10 @@ export function shouldRestorePatient(pacient) {
     return pacient.is_deleted === true;
 }
 
+export function shouldScheduleReminder(delay) {
+    return delay > 0;
+}
+
 export function hasAppointmentConflict(
     startDateTime,
     endDateTime,
