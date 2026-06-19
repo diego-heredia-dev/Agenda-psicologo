@@ -6,6 +6,10 @@ export function isInvalidRange(startDateTime, endDateTime) {
     return startDateTime >= endDateTime;
 }
 
+export function shouldRestorePatient(pacient) {
+    return pacient.is_deleted === true;
+}
+
 export function hasAppointmentConflict(
     startDateTime,
     endDateTime,
