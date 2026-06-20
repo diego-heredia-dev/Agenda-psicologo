@@ -46,7 +46,7 @@ describe("appointmentService.js", () => {
                 dni: "111"
             },
             {
-                dni: "222"
+                dni: "123"
             }
         ];
 
