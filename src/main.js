@@ -8,6 +8,7 @@ const supabaseClient = window.supabase.createClient(
     supabaseKey
 );
 
+
 async function testConnection() {
 
     const { data, error } = await supabaseClient
