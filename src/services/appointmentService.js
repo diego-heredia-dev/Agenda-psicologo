@@ -54,6 +54,11 @@ export function isPatientEditValid(
     return !!(name && lastname && phone && email);
 }
 
+export function isDuplicatePatientDNI(dni, patients) {
+    return patients.some(patients => 
+        patients.dni === dni);
+}
+
 export function searchPatientsByName(
     patients,
     input
