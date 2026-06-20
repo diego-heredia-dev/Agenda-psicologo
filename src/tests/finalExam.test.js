@@ -5,7 +5,8 @@ import {
     isInvalidRange,
     hasAppointmentConflict,
     shouldRestorePatient,
-    shouldScheduleReminder
+    shouldScheduleReminder,
+    searchPatientsByName
 } from "../services/appointmentService";
 
 describe("appointmentService.js", () => {
@@ -32,5 +33,26 @@ describe("appointmentService.js", () => {
         
         //Assert
         expect(result).toBe(false);
+    });
+
+    test("isDuplicatePatientDNI_ExistingDNI_ReturnsTrue", () => {
+        //Arrange
+        const dni = "123";
+
+        const patients = 
+        [
+            {
+                dni: "111"
+            },
+            {
+                dni: "222"
+            }
+        ];
+
+        //Act
+        const result = isDuplicatePatientDNI(dni, patients);
+
+        //Assert
+        expect(result).toBe(true);
     });
 })
