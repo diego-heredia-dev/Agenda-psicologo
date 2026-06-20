@@ -6,7 +6,8 @@ import {
     hasAppointmentConflict,
     shouldRestorePatient,
     shouldScheduleReminder,
-    searchPatientsByName
+    searchPatientsByName,
+    isDuplicatePatientDNI
 } from "../services/appointmentService";
 
 describe("appointmentService.js", () => {
