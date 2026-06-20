@@ -1,4 +1,4 @@
-import { shouldRestorePatient, shouldScheduleReminder } from "./services/appointmentService";
+import { shouldRestorePatient, shouldScheduleReminder } from "./services/appointmentService.js";
 
 const supabaseUrl = "https://migcihzdwmknwnpbrrhy.supabase.co";
 const supabaseKey = "sb_publishable_T40d5CvGLsTftQUlmmwgIA_8fcu3kIc";
