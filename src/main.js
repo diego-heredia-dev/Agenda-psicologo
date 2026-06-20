@@ -291,7 +291,7 @@ async function savePatient() {
         .eq("dni", dni)
         .single();
 
-    if (existing && shouldRestorePatient(existing)) {
+    if (existing && !shouldRestorePatient(existing) && isDuplicatePatientDNI(dni, [existing])) {
         const { error } = await supabaseClient
             .from("patients")
             .update({
